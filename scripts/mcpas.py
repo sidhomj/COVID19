@@ -23,8 +23,6 @@ data.dropna(subset=['Path_Peptide'],inplace=True)
 
 data_piv = pd.pivot_table(data,index='beta_sequences',columns='Path_Peptide',values='counts',
                              fill_value=0.0,aggfunc='max')
-label_dict = dict(zip(data['beta_sequences'],data['orf_name']))
-labels = list(map(label_dict.get,data_piv.index))
 
 X = np.array(data_piv)
 idx = KMeans(n_clusters=3,random_state=2).fit_predict(X)
