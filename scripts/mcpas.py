@@ -1,15 +1,11 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import os
-import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from utils import *
 import matplotlib
 matplotlib.rc('font', family='Arial')
-from copy import deepcopy
 
 data = pd.read_csv('../Data/data_parsed.csv')
 data['counts'] =  1
