@@ -48,9 +48,16 @@ cluster_sel = 1
 df_agg = DFs[cluster_sel].groupby(['peptide', 'orf_name']).agg({'counts': 'sum'}).reset_index()
 BarPlot(df_agg)
 
+df_agg = DFs[cluster_sel].groupby(['Subject']).agg({'Cohort':'first','counts':'sum'}).reset_index()
+BarPlotCohort(df_agg)
+
 cluster_sel = 2
 df_agg = DFs[cluster_sel].groupby(['peptide', 'orf_name']).agg({'counts': 'sum'}).reset_index()
 BarPlot(df_agg)
+
+df_agg = DFs[cluster_sel].groupby(['Subject']).agg({'Cohort':'first','counts':'sum'}).reset_index()
+BarPlotCohort(df_agg)
+
 
 
 

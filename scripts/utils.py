@@ -29,6 +29,7 @@ def Get_Color_Dict(labels):
     return color_dict
 
 def BarPlot(df_agg):
+    plt.figure()
     df_agg.sort_values(by=['orf_name','counts'],inplace=True,ascending = False)
     df_agg.rename(columns = {'orf_name':'ORF'},inplace=True)
     sns.barplot(data=df_agg,x='peptide',y='counts',order=df_agg['peptide'],hue='ORF',dodge=False)
@@ -36,3 +37,12 @@ def BarPlot(df_agg):
     plt.subplots_adjust(bottom=0.3)
     plt.xlabel('')
     plt.ylabel('')
+
+def BarPlotCohort(df_agg):
+    df_agg.sort_values(by='Cohort', inplace=True, ascending=False)
+    plt.figure()
+    sns.barplot(data=df_agg, x='Subject', y='counts', hue='Cohort', dodge=False)
+    plt.xlabel('')
+    plt.ylabel('')
+    plt.xticks(rotation=90)
+    plt.subplots_adjust(bottom=0.2)
