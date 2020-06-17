@@ -5,74 +5,55 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
-import colorsys
-import umap
 from sklearn.cluster import KMeans
+from utils import *
+import matplotlib
+matplotlib.rc('font', family='Arial')
+from copy import deepcopy
 
-def Get_Color_Dict(labels):
-    N = len(np.unique(labels))
-    HSV_tuples = [(x * 1.0 / N, 1.0, 0.5) for x in range(N)]
-    np.random.shuffle(HSV_tuples)
-    RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
-    color_dict = dict(zip(np.unique(labels), RGB_tuples))
-    return color_dict
-
-data = pd.read_csv('Data/data_parsed.csv')
-mcpas = pd.read_csv('Data/McPAS-TCR.csv')
+data = pd.read_csv('../Data/data_parsed.csv')
+data['counts'] =  1
+mcpas = pd.read_csv('../Data/McPAS-TCR.csv')
 mcpas = mcpas[mcpas['Species']=='Human']
 path_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Pathology']))
 data['Pathology'] = data['beta_sequences'].map(path_dict)
-# data = data[data['Cohort'] != 'Healthy (No known exposure)']
-# data.dropna(subset=['Pathology'],inplace=True)
 pep_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Epitope.peptide']))
 data['Path_Peptide'] = data['beta_sequences'].map(pep_dict)
 data.dropna(subset=['Path_Peptide'],inplace=True)
-data['counts'] =  1
 
-piv_subject = pd.pivot_table(data,index='beta_sequences',columns='Path_Peptide',values='counts',
+data_piv = pd.pivot_table(data,index='beta_sequences',columns='Path_Peptide',values='counts',
                              fill_value=0.0,aggfunc='max')
 label_dict = dict(zip(data['beta_sequences'],data['orf_name']))
-labels = list(map(label_dict.get,piv_subject.index))
+labels = list(map(label_dict.get,data_piv.index))
 
-# color_dict = Get_Color_Dict(labels)
-# row_colors = [color_dict[x] for x in labels]
-# CM = sns.clustermap(data=piv_subject.T,cmap='jet')
-# ax = CM.ax_heatmap
-# ax.set_xticklabels('')
-# # ax.set_yticklabels('')
-# plt.subplots_adjust(right=0.8)
-
-X = np.array(piv_subject)
-idx = KMeans(n_clusters=3).fit_predict(X)
+X = np.array(data_piv)
+idx = KMeans(n_clusters=3,random_state=2).fit_predict(X)
 color_dict = Get_Color_Dict(idx)
-row_colors = [color_dict[x] for x in idx]
+col_colors = [color_dict[x] for x in idx]
+data_piv_sort = data_piv.iloc[np.flip(np.argsort(idx))]
+col_colors = np.array(col_colors)[np.flip(np.argsort(idx))]
 
-plt.figure()
-X_2 = umap.UMAP(random_state=6).fit_transform(np.array(piv_subject))
-plt.scatter(X_2[:,0],X_2[:,1],c=row_colors)
-
-CM = sns.clustermap(data=piv_subject.T,cmap='binary',col_colors=row_colors)
+CM = sns.clustermap(data=data_piv_sort.T,cmap='binary',col_cluster=False,col_colors=col_colors)
 ax = CM.ax_heatmap
+CM.cax.set_visible(False)
 ax.set_xticklabels('')
-plt.subplots_adjust(right=0.8)
+plt.subplots_adjust(right=0.8,top=1.1,bottom=0.1)
+ax.set_xlabel('')
+ax.set_ylabel('')
 
 DFs = []
 for cl in np.unique(idx):
-    tcr = piv_subject.index[idx == cl]
+    tcr = data_piv.index[idx == cl]
     DFs.append(data[data['beta_sequences'].isin(tcr)])
 
-DFs[2]['peptide'].value_counts()
-plt.figure()
-sns.barplot(data=DFs[2]['orf_name'].value_counts().reset_index(),x='index',y='orf_name',)
-plt.xticks(rotation=90)
-plt.subplots_adjust(bottom=0.3)
+cluster_sel = 1
+df_agg = DFs[cluster_sel].groupby(['peptide', 'orf_name']).agg({'counts': 'sum'}).reset_index()
+BarPlot(df_agg)
 
-DF = pd.concat(DFs)
+cluster_sel = 2
+df_agg = DFs[cluster_sel].groupby(['peptide', 'orf_name']).agg({'counts': 'sum'}).reset_index()
+BarPlot(df_agg)
 
-plt.figure()
-sns.barplot(data=data['orf_name'].value_counts().reset_index(),x='index',y='orf_name')
-plt.xticks(rotation=90)
-plt.subplots_adjust(bottom=0.3)
 
 
 
