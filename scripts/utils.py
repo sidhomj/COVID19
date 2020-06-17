@@ -5,6 +5,17 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.rc('font', family='Arial')
 
+def Process_Seq(df,col):
+    #Drop null values
+    df = df.dropna(subset=[col])
+
+    #strip any white space and remove non-IUPAC characters
+    df[col] = df[col].str.strip()
+    searchfor = ['\*', 'X', 'O']
+    df = df[~df[col].str.contains('|'.join(searchfor))]
+
+    return df
+
 def Get_Color_Dict(labels):
     N = len(np.unique(labels))
     HSV_tuples = [(x * 1.0 / N, 1.0, 0.5) for x in range(N)]

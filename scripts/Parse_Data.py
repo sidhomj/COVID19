@@ -1,22 +1,10 @@
+""" This script takes the data from Adaptive ImmuneCode and assembles it into a
+dataframe that maps TCR's to their respective subject, cohort, ORF. """
+
 import pandas as pd
 import numpy as np
 import os
-import pickle
-
-gpu = 1
-os.environ["CUDA DEVICE ORDER"] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
-
-def Process_Seq(df,col):
-    #Drop null values
-    df = df.dropna(subset=[col])
-
-    #strip any white space and remove non-IUPAC characters
-    df[col] = df[col].str.strip()
-    searchfor = ['\*', 'X', 'O']
-    df = df[~df[col].str.contains('|'.join(searchfor))]
-
-    return df
+from utils import *
 
 file = '../Data/peptide-detail.csv'
 data = pd.read_csv(file)
