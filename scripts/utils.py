@@ -1,3 +1,7 @@
+"""
+Contains ancillary methods.
+"""
+
 import numpy as np
 import colorsys
 import seaborn as sns
