@@ -7,6 +7,9 @@ import colorsys
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib
+import pandas as pd
+import logomaker
+from matplotlib.ticker import MaxNLocator
 matplotlib.rc('font', family='Arial')
 
 def Process_Seq(df,col):
@@ -29,20 +32,57 @@ def Get_Color_Dict(labels):
     return color_dict
 
 def BarPlot(df_agg):
-    plt.figure()
+    plt.figure(figsize=(8,6))
     df_agg.sort_values(by=['orf_name','counts'],inplace=True,ascending = False)
     df_agg.rename(columns = {'orf_name':'ORF'},inplace=True)
-    sns.barplot(data=df_agg,x='peptide',y='counts',order=df_agg['peptide'],hue='ORF',dodge=False)
+    ax = sns.barplot(data=df_agg,x='peptide',y='counts',order=df_agg['peptide'],hue='ORF',dodge=False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
     plt.xticks(rotation=90)
+    plt.yticks(fontsize=24)
     plt.subplots_adjust(bottom=0.3)
     plt.xlabel('')
     plt.ylabel('')
+    leg = plt.legend(loc='upper right',frameon=False,prop={'size': 16})
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    return leg
 
 def BarPlotCohort(df_agg):
     df_agg.sort_values(by='Cohort', inplace=True, ascending=False)
-    plt.figure()
-    sns.barplot(data=df_agg, x='Subject', y='counts', hue='Cohort', dodge=False)
+    plt.figure(figsize=(8,6))
+    ax = sns.barplot(data=df_agg, x='Subject', y='counts', hue='Cohort', dodge=False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
     plt.xlabel('')
     plt.ylabel('')
-    plt.xticks(rotation=90)
+    plt.xticks(rotation=90,fontsize=16)
+    plt.yticks(fontsize=24)
     plt.subplots_adjust(bottom=0.2)
+    plt.legend(frameon=False,prop={'size': 16},loc='upper right')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+def Get_Logo_df(motifs_logo,kernel):
+    df_motifs = pd.DataFrame(motifs_logo)
+    df_motifs = df_motifs[0].apply(lambda x: pd.Series(list(x)))
+    df_motifs.fillna(value='X',inplace=True)
+    cols = np.unique(df_motifs)
+    df_out = pd.DataFrame()
+    df_out['pos'] = list(range(kernel))
+    for c in cols:
+        df_out[c] = None
+    df_out.set_index('pos', inplace=True)
+    for i in range(kernel):
+        temp = df_motifs[i].value_counts()
+        for k in np.array(temp.index):
+            df_out.loc[i, k] = temp[k] / np.sum(temp)
+    df_out.fillna(value=0.0, inplace=True)
+    if 'X' in cols:
+        df_out.drop(columns=['X'], inplace=True)
+    return df_out
+def Make_Logo(sel_seq):
+    df_logo = Get_Logo_df(sel_seq,np.max([len(x) for x in sel_seq]))
+    ax = logomaker.Logo(df_logo,color_scheme='weblogo_protein')
+    ax.style_spines(spines=['top', 'right', 'left', 'bottom'], visible=False)
+    ax.ax.set_xticks([])
+    ax.ax.set_yticks([])
+    return ax
