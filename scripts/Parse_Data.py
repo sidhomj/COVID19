@@ -54,5 +54,5 @@ data['orf'] = orf_list
 orf_dict = dict(zip(df_orf['Amino Acid'],df_orf['ORF']))
 orf_dict['ORF1ab'] = 'ORF1ab'
 data['orf_name'] = data['orf'].map(orf_dict)
-data.drop_duplicates(subset=['beta_sequences','peptide'],inplace=True)
+data.drop_duplicates(subset=['beta_sequences','peptide','Subject'],inplace=True)
 data.to_csv('../Data/data_parsed.csv',index=False)
