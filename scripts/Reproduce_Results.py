@@ -1,5 +1,5 @@
 """
-Code to generate results and figures from manuscript.
+Code to generate results and figures from manuscript. This is the same code as is present in the jupyter notebook.
 """
 
 import pandas as pd
