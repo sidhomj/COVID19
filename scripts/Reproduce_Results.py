@@ -12,57 +12,12 @@ import matplotlib
 matplotlib.rc('font', family='Arial')
 import logomaker
 
-# data files
-subj = pd.read_csv('../Data/subject-metadata.csv')
-pept_hits = pd.read_csv('../Data/peptide-hits.csv')
-pept_detail = pd.read_csv('../Data/peptide-detail.csv')
-mini_hits = pd.read_csv('../Data/minigene-hits.csv')
-mini_detail = pd.read_csv('../Data/minigene-detail.csv')
-
-# columns name adjustments
-pept_detail.rename(columns={'ORF Coverage': 'ORF', 'Amino Acids': 'Amino Acid'}, inplace=True)
-mini_detail.drop(columns=['ORF Genebank ID'], inplace=True)
-(pept_detail.columns == mini_detail.columns).all()
-pept_detail['assay type'] = 'peptide'
-mini_detail['assay type'] = 'minigene'
-
-# combine peptide and minigene data and split out TCR beta info
-all_detail = pd.concat([pept_detail, mini_detail], axis=0)
-all_detail[['CDR3-BETA', 'TCRBV', 'TCRBJ']] = all_detail['TCR BioIdentity'].str.split('+', expand=True)
-
-# load mcpas data and filter
-mcpas = pd.read_csv('../Data/McPAS-TCR.csv', low_memory=False, encoding='iso-8859-1')
-idx = (mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() & (mcpas['Category'] == 'Pathogens')
-mcpas_human = mcpas.loc[idx, ]
-
-# background distribution of data in mcpas
-mcpas_bg = mcpas_human.groupby(['Pathology', 'Antigen.protein']).size()
-
-# cross mcpass TCR beta against covid hits (exact sequence  match ...)
-mcpas_human_X_covid = mcpas_human['CDR3.beta.aa'].values[:, np.newaxis] == all_detail['CDR3-BETA'].values[np.newaxis, :]
-# covid specific distribution of data in mcpas
-mcpas_covid = mcpas_human.loc[mcpas_human_X_covid.any(axis=1), :].groupby(['Pathology', 'Antigen.protein']).size()
-
-# combine tables
-tab = pd.concat([mcpas_bg, mcpas_covid], join='outer', axis=1).rename(columns={0: 'all mcpas', 1: 'covid specific'}).fillna(0).reset_index()
-tab = tab.sort_values(['Pathology', 'all mcpas'], ascending=[True, False])
-
-# plot
-fig, ax = plt.subplots(ncols=2,figsize=(10,8))
-yticks = np.arange(tab.shape[0])
-yticklabels = tab['Pathology'] + ' (' + tab['Antigen.protein'] + ')'
-ax[0].barh(yticks, tab['all mcpas'].values, height=0.5,color='grey')
-ax[0].set(yticks=yticks, yticklabels=yticklabels, title='All TCRs in McPAS')
-ax[1].barh(np.arange(tab.shape[0]), tab['covid specific'].values, height=0.5,color='grey')
-ax[1].set(yticks=yticks, yticklabels='', title='COVID Specific TCRs in McPAS')
-plt.tight_layout()
-fig.savefig('../Results/1A.eps')
-
 #pull parsed data
 data = pd.read_csv('../Data/data_parsed.csv')
 data['counts'] =  1
 mcpas = pd.read_csv('../Data/McPAS-TCR.csv')
-mcpas = mcpas[mcpas['Species']=='Human']
+idx = (mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() & (mcpas['Category']=='Pathogens')
+mcpas = mcpas.loc[idx, ]
 path_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Pathology']))
 data['Pathology'] = data['beta_sequences'].map(path_dict)
 pep_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Epitope.peptide']))
