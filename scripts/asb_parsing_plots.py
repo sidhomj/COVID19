@@ -51,12 +51,12 @@ ax[2].xaxis.tick_top()
 plt.tight_layout()
 
 pept_idx = 'GILGFVFTL'
-# tab_fischer = pd.concat([mcpas_counts.loc[mcpas_counts['Epitope.peptide'] == pept_idx, ['mcpas_baseline', 'mcpas_covid']].T,
-#                          mcpas_counts.loc[~(mcpas_counts['Epitope.peptide'] == pept_idx), ['mcpas_baseline', 'mcpas_covid']].sum(axis=0)], axis=1)
-# tab_fischer.columns = [pept_idx, 'not_%s' % pept_idx]
-# tab_fischer.loc['mcpas_not_covid'] = tab_fischer.loc['mcpas_baseline', :] - tab_fischer.loc['mcpas_covid', :]
-# fisher_exact(tab_fischer.loc[['mcpas_covid', 'mcpas_not_covid'], :])
-# tab_fischer.loc[['mcpas_covid', 'mcpas_not_covid'], :] / tab_fischer.loc['mcpas_baseline', :]
+tab_fischer = pd.concat([mcpas_counts.loc[mcpas_counts['Epitope.peptide'] == pept_idx, ['mcpas_baseline', 'mcpas_covid']].T,
+                         mcpas_counts.loc[~(mcpas_counts['Epitope.peptide'] == pept_idx), ['mcpas_baseline', 'mcpas_covid']].sum(axis=0)], axis=1)
+tab_fischer.columns = [pept_idx, 'not_%s' % pept_idx]
+tab_fischer.loc['mcpas_not_covid'] = tab_fischer.loc['mcpas_baseline', :] - tab_fischer.loc['mcpas_covid', :]
+fisher_exact(tab_fischer.loc[['mcpas_covid', 'mcpas_not_covid'], :])
+tab_fischer.loc[['mcpas_covid', 'mcpas_not_covid'], :] / tab_fischer.loc['mcpas_baseline', :]
 
 ## distribution of ORFs for GILGFVFTL
 
@@ -64,11 +64,8 @@ pept_idx = 'GILGFVFTL'
 pept_covid_orf_uniq = ~pept_detail[['beta_sequences', 'orf_name']].duplicated()
 
 covid_orf_counts = pd.concat([pept_detail.loc[pept_covid_orf_uniq, :].groupby('orf_name').size(),
-                              # pept_detail.loc[pept_covid_orf_uniq & pept_detail['beta_sequences'].isin(mcpas.loc[mcpas['Epitope.peptide'] == pept_idx, 'CDR3.beta.aa']), :].groupby('ORF').size()],
                               pept_detail.loc[pept_covid_orf_uniq & pept_detail['beta_sequences'].isin(mcpas['CDR3.beta.aa']), :].groupby('orf_name').size()],
                              axis=1).fillna(0).reset_index()
-# pept_detail.loc[pept_covid_orf_uniq & pept_detail['beta_sequences'].isin(
-#     mcpas.loc[mcpas['Epitope.peptide'] == pept_idx, 'CDR3.beta.aa']), :].groupby('ORF').size()],
 
 covid_orf_counts.columns = ['orf_name', 'orfs_baseline', 'orfs']
 
