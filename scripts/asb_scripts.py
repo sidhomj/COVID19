@@ -81,3 +81,6 @@ delta_bar_plots(baseline=covid_orf_counts[['baseline', 'baseline_prop']].values,
                 max_proporption=.7, max_delta=0.6)
 # resize then call
 plt.tight_layout()
+
+# TODO: JW please review this if this is what you are looking for
+pept_detail_with_mcpas = pd.merge(pept_detail, mcpas[['CDR3.beta.aa', 'Pathology', 'Antigen.protein', 'Epitope.peptide']], how='inner', left_on='beta_sequences', right_on='CDR3.beta.aa')
