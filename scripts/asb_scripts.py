@@ -3,6 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import fisher_exact
 from scripts.utils import delta_bar_plots
+from statsmodels.stats.multitest import multipletests
 
 
 pept_detail = pd.read_csv('./Data/data_parsed.csv')
@@ -39,7 +40,8 @@ mcpas_covid['fisher_p'] = None
 for idx in mcpas_covid.index:
     idx_bool = mcpas_covid.index == idx
     mcpas_covid.loc[idx, 'fisher_p'] = fisher_exact(np.stack([mcpas_covid.loc[idx_bool, ['covid', 'not_covid']].sum(axis=0).values,
-                                                              mcpas_covid.loc[~idx_bool, ['covid', 'not_covid']].sum(axis=0).values], axis=1))[1]
+                                                              mcpas_covid.loc[~idx_bool, ['covid', 'not_covid']].sum(axis=0).values], axis=1), alternative='greater')[1]
+mcpas_covid['fdr_bh'] = multipletests(mcpas_covid['fisher_p'], alpha=0.05, method='fdr_bh')[1]
 
 # plot
 delta_bar_plots(baseline=mcpas_covid[['baseline', 'baseline_prop']].values,
@@ -69,7 +71,8 @@ covid_orf_counts['fisher_p'] = None
 for idx in covid_orf_counts.index:
     idx_bool = covid_orf_counts.index == idx
     covid_orf_counts.loc[idx, 'fisher_p'] = fisher_exact(np.stack([covid_orf_counts.loc[idx_bool, ['orf', 'not_orf']].sum(axis=0).values,
-                                                                   covid_orf_counts.loc[~idx_bool, ['orf', 'not_orf']].sum(axis=0).values], axis=1))[1]
+                                                                   covid_orf_counts.loc[~idx_bool, ['orf', 'not_orf']].sum(axis=0).values], axis=1), alternative='greater')[1]
+covid_orf_counts['fdr_bh'] = multipletests(covid_orf_counts['fisher_p'], alpha=0.05, method='fdr_bh')[1]
 
 # plot
 delta_bar_plots(baseline=covid_orf_counts[['baseline', 'baseline_prop']].values,
