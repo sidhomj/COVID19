@@ -22,7 +22,6 @@ def Process_Seq(df,col):
     df = df[~df[col].str.contains('|'.join(searchfor))]
 
     return df
-
 def Get_Color_Dict(labels):
     N = len(np.unique(labels))
     HSV_tuples = [(x * 1.0 / N, 1.0, 0.5) for x in range(N)]
@@ -30,7 +29,6 @@ def Get_Color_Dict(labels):
     RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
     color_dict = dict(zip(np.unique(labels), RGB_tuples))
     return color_dict
-
 def BarPlot(df_agg,figsize=(8,6)):
     plt.figure(figsize=figsize)
     df_agg.sort_values(by=['orf_name','counts'],inplace=True,ascending = False)
@@ -46,7 +44,6 @@ def BarPlot(df_agg,figsize=(8,6)):
     leg = plt.legend(loc='upper right',frameon=False,prop={'size': 16})
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     return leg
-
 def BarPlotCohort(df_agg):
     df_agg.sort_values(by='Cohort', inplace=True, ascending=False)
     plt.figure(figsize=(8,6))
@@ -60,7 +57,6 @@ def BarPlotCohort(df_agg):
     plt.subplots_adjust(bottom=0.2)
     plt.legend(frameon=False,prop={'size': 16},loc='upper right')
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-
 def Get_Logo_df(motifs_logo,kernel):
     df_motifs = pd.DataFrame(motifs_logo)
     df_motifs = df_motifs[0].apply(lambda x: pd.Series(list(x)))
