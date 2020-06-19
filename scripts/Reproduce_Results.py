@@ -13,22 +13,34 @@ matplotlib.rc('font', family='Arial')
 import logomaker
 
 #pull parsed data
+#pull parsed data
 data = pd.read_csv('../Data/data_parsed.csv')
 data['counts'] =  1
 mcpas = pd.read_csv('../Data/McPAS-TCR.csv')
-idx = (mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() & (mcpas['Category']=='Pathogens')
+idx = (mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() & ~mcpas['Epitope.peptide'].isna()
 mcpas = mcpas.loc[idx, ]
+mcpas.drop_duplicates(subset=['CDR3.beta.aa','Epitope.peptide'],inplace=True)
+data = pd.merge(data, mcpas[['CDR3.beta.aa', 'Pathology', 'Antigen.protein', 'Epitope.peptide']],
+             how='left', left_on='beta_sequences', right_on='CDR3.beta.aa')
+data.dropna(subset=['Epitope.peptide'], inplace=True)
+
+data = pd.read_csv('../Data/data_parsed.csv')
+data['counts'] =  1
+mcpas = pd.read_csv('../Data/McPAS-TCR.csv')
+idx = (mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() #& (mcpas['Category']=='Pathogens')
+mcpas = mcpas.loc[idx, ]
+mcpas.dropna(subset=['Antigen.protein'],inplace=True)
 path_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Pathology']))
 data['Pathology'] = data['beta_sequences'].map(path_dict)
 pep_dict = dict(zip(mcpas['CDR3.beta.aa'],mcpas['Epitope.peptide']))
-data['Path_Peptide'] = data['beta_sequences'].map(pep_dict)
-data.dropna(subset=['Path_Peptide'],inplace=True)
+data['Epitope.peptide'] = data['beta_sequences'].map(pep_dict)
+data.dropna(subset=['Epitope.peptide'],inplace=True)
 
-data_piv = pd.pivot_table(data,index='beta_sequences',columns='Path_Peptide',values='counts',
+data_piv = pd.pivot_table(data,index='beta_sequences',columns='Epitope.peptide',values='counts',
                              fill_value=0.0,aggfunc='max')
 
 X = np.array(data_piv)
-idx = KMeans(n_clusters=3,random_state=2).fit_predict(X)
+idx = KMeans(n_clusters=3,random_state=7).fit_predict(X)
 color_dict = Get_Color_Dict(idx)
 col_colors = [color_dict[x] for x in idx]
 data_piv_sort = data_piv.iloc[np.flip(np.argsort(idx))]
@@ -54,10 +66,11 @@ df_agg = DFs[cluster_sel].groupby(['peptide', 'orf_name']).agg({'counts': 'sum'}
 df_agg.sort_values(by=['orf_name','peptide'],inplace=True,ascending=[False,True])
 df_agg.reset_index(drop=True,inplace=True)
 leg = BarPlot(df_agg)
-bbox_to_anchor=[1.15, 1]
+bbox_to_anchor=[1.25, 1.0]
 leg.set_bbox_to_anchor(bbox_to_anchor)
-
+# plt.subplots_adjust(right=0.8)
 plt.savefig('../Results/cluster1_pep.eps')
+
 DFs[cluster_sel].sort_values(by=['orf_name','peptide'],inplace=True,ascending=[False,True])
 sel = [0,1,2,7]
 df_sel = DFs[cluster_sel][DFs[cluster_sel]['peptide'].isin(df_agg['peptide'].iloc[sel])]
@@ -84,6 +97,7 @@ ax.fig.savefig('../Results/m1_cluster_1.eps')
 
 df_agg = DFs[cluster_sel].drop_duplicates(subset=['beta_sequences', 'Subject'])
 df_agg = df_agg.groupby(['Subject']).agg({'Cohort': 'first', 'counts': 'sum'}).reset_index()
+df_agg.sort_values(by='counts',ascending=False,inplace=True)
 BarPlotCohort(df_agg)
 plt.savefig('../Results/cluster2_subj.eps')
 

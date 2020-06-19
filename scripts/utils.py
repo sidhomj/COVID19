@@ -31,8 +31,8 @@ def Get_Color_Dict(labels):
     color_dict = dict(zip(np.unique(labels), RGB_tuples))
     return color_dict
 
-def BarPlot(df_agg):
-    plt.figure(figsize=(8,6))
+def BarPlot(df_agg,figsize=(8,6)):
+    plt.figure(figsize=figsize)
     df_agg.sort_values(by=['orf_name','counts'],inplace=True,ascending = False)
     df_agg.rename(columns = {'orf_name':'ORF'},inplace=True)
     ax = sns.barplot(data=df_agg,x='peptide',y='counts',order=df_agg['peptide'],hue='ORF',dodge=False)
