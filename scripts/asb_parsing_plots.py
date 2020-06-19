@@ -2,29 +2,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.stats import fisher_exact
-#
-#
-# # data files
-# subj = pd.read_csv('subject-metadata.csv')
-# pept_hits = pd.read_csv('peptide-hits.csv')
-# pept_detail = pd.read_csv('peptide-detail.csv')
-# mini_hits = pd.read_csv('minigene-hits.csv')
-# mini_detail = pd.read_csv('minigene-detail.csv')
-#
-# # columns name adjustments
-# pept_detail.rename(columns={'ORF Coverage': 'ORF', 'Amino Acids': 'Amino Acid'}, inplace=True)
-# mini_detail.drop(columns=['ORF Genebank ID'], inplace=True)
-# (pept_detail.columns == mini_detail.columns).all()
-# pept_detail['assay type'] = 'peptide'
-# mini_detail['assay type'] = 'minigene'
-#
-# # combine peptide and minigene?
-# # all_detail = pd.concat([pept_detail, mini_detail], axis=0)
-#
-# # split out TCR beta info
-# pept_detail[['CDR3-BETA', 'TCRBV', 'TCRBJ']] = pept_detail['TCR BioIdentity'].str.split('+', expand=True)
-# # unique CDR3 seq
-# pept_uniq_idx = ~pept_detail['CDR3-BETA'].duplicated()
+
 
 pept_detail = pd.read_csv('../Data/data_parsed.csv')
 
@@ -34,6 +12,8 @@ mcpas = pd.read_csv('../Data/McPAS-TCR.csv', low_memory=False, encoding='iso-885
 mcpas = mcpas.loc[(mcpas['Species'] == 'Human') & ~mcpas['CDR3.beta.aa'].isna() & ~mcpas['Epitope.peptide'].isna() & (mcpas['Category'] == 'Pathogens'), ]
 # remove duplicates
 mcpas = mcpas.loc[~mcpas[['CDR3.beta.aa', 'Epitope.peptide']].duplicated(), :]
+
+total_intersection = len(np.intersect1d(mcpas['CDR3.beta.aa'],pept_detail['beta_sequences']))
 
 # count unique mcpas records that were found in ImmunoCode COVID screen
 mcpas_counts = pd.concat([mcpas.groupby(['Pathology', 'Antigen.protein', 'Epitope.peptide']).size(),
